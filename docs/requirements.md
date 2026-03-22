@@ -1,328 +1,400 @@
-# Requirements Document – IronFlow (Gym Workout Planner)
+# Requirements Document
+## GymTrack Pro — Personal Gym Schedule Manager with AI Coaching Chatbot
 
-## 1. Overview
-
-This document defines the functional and non-functional requirements for the IronFlow system, including frontend, backend, and database specifications.
-
----
-
-## 2. System Architecture
-
-* Frontend: Next.js (Client-side UI)
-* Backend: Node.js (REST API)
-* Database: PostgreSQL
-
-Communication flow:
-Frontend → Backend API → Database
+**Version:** 1.0  
+**Status:** Draft  
+**Last Updated:** March 2026
 
 ---
 
-## 3. Functional Requirements
+## Table of Contents
 
-### 3.1 Authentication
-
-#### Features
-
-* User registration
-* User login
-* Secure authentication using JWT
-
-#### API
-
-**POST /auth/register**
-
-* Input:
-
-  * email (string, required)
-  * password (string, required, min 6 chars)
-* Output:
-
-  * user_id
-  * token
+1. [Introduction](#1-introduction)
+2. [Business Requirements](#2-business-requirements)
+3. [Stakeholder Requirements](#3-stakeholder-requirements)
+4. [User Requirements](#4-user-requirements)
+5. [System Requirements](#5-system-requirements)
+6. [Functional Requirements](#6-functional-requirements)
+7. [Non-Functional Requirements](#7-non-functional-requirements)
+8. [Constraints & Assumptions](#8-constraints--assumptions)
+9. [Acceptance Criteria Summary](#9-acceptance-criteria-summary)
 
 ---
 
-**POST /auth/login**
+## 1. Introduction
 
-* Input:
+### 1.1 Purpose
 
-  * email
-  * password
-* Output:
+This document defines the requirements for **GymTrack Pro**, a web-based application that enables individuals to plan, log, and track their personal gym training schedules. The system includes an AI-powered chatbot that provides personalized advice on workouts and nutrition.
 
-  * token
+### 1.2 Scope
 
----
+GymTrack Pro covers:
+- User account management and onboarding
+- Workout plan creation and management
+- Live workout session logging
+- Progress tracking and analytics
+- AI chatbot for workout and nutrition consultation
+- Basic nutrition logging and macro tracking
 
-### 3.2 Workout Management
+Out of scope (v1.0):
+- Mobile native application (iOS/Android)
+- Personal trainer management portal
+- Social sharing and community features
+- Integration with wearable devices (Apple Watch, Garmin, etc.)
+- E-commerce or supplement purchasing
 
-#### Features
+### 1.3 Definitions
 
-* Create workout
-* Update workout
-* Delete workout
-* Get workouts by user
+| Term | Definition |
+|------|------------|
+| **Workout Plan** | A structured weekly template assigning exercise sessions to specific days |
+| **Workout Session** | A single logged training instance with recorded sets, reps, and weights |
+| **Set / Rep** | Set = one group of repetitions; Rep = a single execution of a movement |
+| **Volume** | Total training load calculated as Sets × Reps × Weight |
+| **1RM** | One-Rep Max — the maximum weight lifted for one complete repetition |
+| **Streak** | Consecutive days of completed workout sessions |
+| **TDEE** | Total Daily Energy Expenditure — estimated daily calorie burn |
+| **Macro** | Macronutrients: Protein, Carbohydrates, and Fat |
+| **Onboarding** | Initial profile setup flow for new users |
+| **Template** | A pre-built workout program (e.g., PPL, Full Body, Upper/Lower) |
 
-#### API
+### 1.4 Document Conventions
 
-**GET /workouts**
-
-* Headers:
-
-  * Authorization: Bearer token
-* Output:
-
-  * List of workouts
-
----
-
-**POST /workouts**
-
-* Input:
-
-  * date (date)
-* Output:
-
-  * workout_id
-
----
-
-**PUT /workouts/:id**
-
-* Input:
-
-  * date
-* Output:
-
-  * updated workout
+- **[MUST]** — Mandatory requirement; the system cannot go live without it
+- **[SHOULD]** — High-priority requirement; omission requires sign-off
+- **[MAY]** — Optional enhancement; included if time permits
+- **REQ-XXX** — Unique requirement identifier
+- **US-XXX** — User story identifier
 
 ---
 
-**DELETE /workouts/:id**
+## 2. Business Requirements
 
-* Output:
+### 2.1 Business Objectives
 
-  * success message
+| ID | Objective | Success Metric |
+|----|-----------|----------------|
+| BO-01 | Enable individuals to independently manage gym training without a personal trainer | ≥70% of users create and complete at least one workout plan within 7 days of registration |
+| BO-02 | Retain users through measurable progress visibility | ≥50% of registered users log at least 2 sessions per week after the first month |
+| BO-03 | Deliver personalized AI guidance competitive with basic PT consultations | Chatbot satisfaction score ≥ 4.0/5.0 in user surveys |
+| BO-04 | Establish a scalable SaaS product foundation | System handles 10,000 concurrent users without degradation |
 
----
+### 2.2 Business Rules
 
-### 3.3 Exercise Management
-
-#### Features
-
-* Retrieve exercise list
-* Categorize exercises by muscle group
-
-#### API
-
-**GET /exercises**
-
-* Output:
-
-  * id
-  * name
-  * muscle_group
+- **BR-01:** All personal health data (weight, body measurements, nutrition) must remain private and visible only to the authenticated user.
+- **BR-02:** The AI chatbot must not provide medical diagnoses or claim to replace licensed healthcare professionals. All advice must include appropriate disclaimers.
+- **BR-03:** Users must be able to permanently delete their account and all associated data at any time.
+- **BR-04:** The system must not share or sell user data to third parties.
+- **BR-05:** Workout templates offered to users must be based on established training methodologies (not randomly generated).
 
 ---
 
-### 3.4 Workout Exercise
+## 3. Stakeholder Requirements
 
-#### Features
+### 3.1 Stakeholder Map
 
-* Add exercises to a workout
-* Define sets and reps
+| Stakeholder | Role | Primary Interest |
+|-------------|------|-----------------|
+| End User | Primary consumer of the product | Achieve fitness goals, easy to use |
+| Product Owner | Defines product vision | User retention, feature roadmap |
+| Development Team | Builds and maintains the system | Clear requirements, technical feasibility |
+| Admin / Ops Team | Monitors and manages the platform | System health, user management |
+| AI Provider (Anthropic) | Supplies the LLM for the chatbot | Compliant usage per API terms |
 
-#### API
+### 3.2 Stakeholder Needs
 
-**POST /workout-exercises**
+**End Users need:**
+- A frictionless way to plan and log workouts without manual spreadsheets
+- Reliable progress data that motivates continued training
+- Instant, contextual answers to fitness questions without hiring a trainer
+- Confidence their health data is private and secure
 
-* Input:
+**Product Owner needs:**
+- A system that can be launched as an MVP within 2 months
+- Feature extensibility without major architectural changes
+- Analytics on feature usage to inform future development
 
-  * workout_id
-  * exercise_id
-  * sets (int)
-  * reps (int)
-
----
-
-**DELETE /workout-exercises/:id**
-
----
-
-### 3.5 Progress Tracking
-
-#### Features
-
-* Log workout results
-* View progress history
-
-#### API
-
-**POST /progress**
-
-* Input:
-
-  * exercise_id
-  * weight (float)
-  * reps (int)
-  * date
+**Admin Team needs:**
+- Dashboard for monitoring active users and platform health
+- Ability to manage user accounts (ban, support) without accessing personal data
 
 ---
 
-**GET /progress**
+## 4. User Requirements
 
-* Output:
+### 4.1 User Personas
 
-  * list of logs
+#### Persona A — "The Beginner" (Primary)
+- Age: 20–30, no prior gym experience
+- Motivation: Start training, unsure where to begin
+- Pain points: Doesn't know what exercises to do, fears injury, overwhelmed by information
+- **Needs:** Guided onboarding, pre-built plans, chatbot for basic questions, simple UI
+
+#### Persona B — "The Intermediate Self-Trainer" (Primary)
+- Age: 25–40, training 6–18 months independently
+- Motivation: Optimize progress, track strength gains
+- Pain points: Progress plateaued, nutrition unclear, lacks structure
+- **Needs:** Custom plan builder, strength tracking (1RM), macro guidance, chatbot for advanced questions
+
+#### Persona C — "The Busy Professional" (Secondary)
+- Age: 28–45, high schedule variability
+- Motivation: Stay consistent despite time constraints
+- Pain points: Misses sessions, hard to reschedule, no time to research
+- **Needs:** Flexible scheduling, reminder notifications, quick session logging, short workout templates
+
+### 4.2 User Stories
+
+#### Authentication & Profile
+
+| ID | User Story | Priority |
+|----|-----------|---------|
+| US-001 | As a new visitor, I want to sign up using my email or Google account so that I can access the platform quickly. | MUST |
+| US-002 | As a registered user, I want to complete an onboarding questionnaire so that the system can suggest an appropriate starting plan. | MUST |
+| US-003 | As a user, I want to update my body measurements (weight, height, goal) so that my profile reflects my current state. | MUST |
+| US-004 | As a user, I want to delete my account and all my data permanently so that I have full control over my privacy. | MUST |
+
+#### Workout Planning
+
+| ID | User Story | Priority |
+|----|-----------|---------|
+| US-010 | As a user, I want to create a weekly workout plan by selecting days and exercises so that I have a structured training schedule. | MUST |
+| US-011 | As a user, I want to browse a library of exercises filtered by muscle group and equipment so that I can find relevant exercises for my plan. | MUST |
+| US-012 | As a user, I want to choose from pre-built program templates (PPL, Full Body, etc.) so that I don't have to build a plan from scratch. | MUST |
+| US-013 | As a user, I want to set target sets, reps, and rest times for each exercise so that the session guides me through my planned workload. | MUST |
+| US-014 | As a user, I want to duplicate my current plan to the next week so that I can easily repeat my training cycle. | MAY |
+
+#### Workout Logging
+
+| ID | User Story | Priority |
+|----|-----------|---------|
+| US-020 | As a user, I want to start an active workout session from my plan so that I can log sets in real time. | MUST |
+| US-021 | As a user, I want to record the weight and reps for each set during a session so that my performance is tracked accurately. | MUST |
+| US-022 | As a user, I want an automatic rest timer between sets so that I don't have to watch the clock. | SHOULD |
+| US-023 | As a user, I want to see a session summary (total volume, duration, streak) when I finish a session so that I feel a sense of accomplishment. | MUST |
+| US-024 | As a user, I want to mark individual sets as skipped so that I can log incomplete sessions without corrupting my data. | SHOULD |
+
+#### Progress Tracking
+
+| ID | User Story | Priority |
+|----|-----------|---------|
+| US-030 | As a user, I want to view a dashboard showing my weekly training overview and current streak so that I can see my consistency at a glance. | MUST |
+| US-031 | As a user, I want to log my daily weight and view a trend chart so that I can see whether I'm on track toward my goal. | MUST |
+| US-032 | As a user, I want to track my estimated 1RM for key lifts over time so that I can measure strength progression. | SHOULD |
+| US-033 | As a user, I want to filter my progress charts by time range (4 weeks, 3 months, all time) so that I can analyze different periods. | SHOULD |
+| US-034 | As a user, I want to earn streaks and achievement badges so that I feel motivated to stay consistent. | SHOULD |
+
+#### AI Chatbot
+
+| ID | User Story | Priority |
+|----|-----------|---------|
+| US-040 | As a user, I want to ask the chatbot about exercise selection, technique, and alternatives so that I can make informed decisions about my training. | MUST |
+| US-041 | As a user, I want the chatbot to know my current plan and profile so that its answers are relevant to my specific situation. | MUST |
+| US-042 | As a user, I want to ask the chatbot about nutrition, calorie targets, and macros so that I can support my training with proper diet. | MUST |
+| US-043 | As a user, I want the chatbot to suggest exercise alternatives when I mention an injury or lack of equipment so that I can adapt my training. | MUST |
+| US-044 | As a user, I want to see quick prompt suggestions at the start of a chat so that I don't have to think of what to ask. | SHOULD |
+| US-045 | As a user, I want to review my past conversations with the chatbot so that I can reference previous advice. | SHOULD |
+
+#### Nutrition
+
+| ID | User Story | Priority |
+|----|-----------|---------|
+| US-050 | As a user, I want the system to calculate my TDEE based on my profile so that I have a baseline calorie target. | SHOULD |
+| US-051 | As a user, I want to log my daily meals with calorie and macro information so that I can monitor my nutritional intake. | SHOULD |
+| US-052 | As a user, I want to see daily progress bars for protein, carbs, and fat so that I know how close I am to my macro targets. | SHOULD |
 
 ---
 
-## 4. Frontend Requirements
+## 5. System Requirements
 
-### Pages
+### 5.1 System Context
 
-* Dashboard
-* Workout Calendar
-* Workout Detail Page
-* Progress Page
-* Authentication صفحات (Login/Register)
+GymTrack Pro is a web application deployed on cloud infrastructure. It integrates with:
+- **Authentication provider** (Google OAuth 2.0)
+- **Anthropic Claude API** (AI chatbot)
+- **Cloud object storage** (exercise media: images, GIFs)
+- **Email service** (account verification, notifications)
 
----
+### 5.2 System-Level Requirements
 
-### UI Features
-
-* Display workouts by date
-* Form to create/edit workouts
-* Input fields for reps and weight
-* Simple and clean layout
-
----
-
-## 5. Database Requirements
-
-### Tables
-
-#### users
-
-* id (PK)
-* email (unique)
-* password
+| ID | Requirement | Priority |
+|----|-------------|---------|
+| SYS-01 | The system shall be accessible via modern web browsers (Chrome, Firefox, Safari, Edge — latest 2 major versions) | MUST |
+| SYS-02 | The system shall be fully responsive and usable on screens ≥ 375px wide | MUST |
+| SYS-03 | The system shall support concurrent access by at least 10,000 active users without performance degradation | MUST |
+| SYS-04 | The system shall maintain 99.5% uptime measured monthly | MUST |
+| SYS-05 | All data transmission shall be encrypted via HTTPS/TLS 1.2+ | MUST |
+| SYS-06 | User passwords shall be hashed using bcrypt with a minimum cost factor of 12 | MUST |
+| SYS-07 | The system shall perform daily automated database backups with 30-day retention | MUST |
+| SYS-08 | The system shall support Vietnamese (default) and English as UI languages | SHOULD |
 
 ---
 
-#### workouts
+## 6. Functional Requirements
 
-* id (PK)
-* user_id (FK)
-* date
+### 6.1 Authentication & Account Management
 
----
+| ID | Requirement | Priority |
+|----|-------------|---------|
+| REQ-F-001 | The system shall allow users to register with email and password | MUST |
+| REQ-F-002 | The system shall support Google OAuth 2.0 registration and login | MUST |
+| REQ-F-003 | The system shall send an email verification link upon email registration | MUST |
+| REQ-F-004 | The system shall provide a "Forgot Password" flow via email reset link | MUST |
+| REQ-F-005 | The system shall present a 5-step onboarding wizard to new users upon first login | MUST |
+| REQ-F-006 | The system shall allow users to update their profile information at any time | MUST |
+| REQ-F-007 | The system shall allow users to permanently delete their account and all associated data | MUST |
 
-#### exercises
+### 6.2 Workout Plan Management
 
-* id (PK)
-* name
-* muscle_group
+| ID | Requirement | Priority |
+|----|-------------|---------|
+| REQ-F-010 | The system shall allow users to create workout plans with a defined number of training days per week | MUST |
+| REQ-F-011 | The system shall provide an exercise library containing at least 100 exercises with muscle group tags, equipment tags, and instructional images/GIFs | MUST |
+| REQ-F-012 | The system shall allow users to search and filter exercises by name, muscle group, and equipment type | MUST |
+| REQ-F-013 | The system shall allow users to add exercises to a plan day and configure target sets, target reps, and rest duration | MUST |
+| REQ-F-014 | The system shall provide at least 5 pre-built workout program templates (e.g., PPL, Full Body 3×/week, Upper/Lower, Beginner 3×/week, Cardio + Strength) | MUST |
+| REQ-F-015 | The system shall allow users to reorder exercises within a plan day via drag-and-drop or up/down controls | SHOULD |
+| REQ-F-016 | The system shall allow users to duplicate an existing workout plan | MAY |
 
----
+### 6.3 Workout Session Logging
 
-#### workout_exercises
+| ID | Requirement | Priority |
+|----|-------------|---------|
+| REQ-F-020 | The system shall allow users to start a workout session from a scheduled plan day | MUST |
+| REQ-F-021 | The system shall display exercises in sequence during an active session | MUST |
+| REQ-F-022 | The system shall allow users to log weight (kg or lb) and reps for each set | MUST |
+| REQ-F-023 | The system shall auto-populate the previous session's values as defaults for the current session | SHOULD |
+| REQ-F-024 | The system shall provide a countdown rest timer between sets | SHOULD |
+| REQ-F-025 | The system shall allow users to mark a set as skipped | SHOULD |
+| REQ-F-026 | The system shall save a session summary upon completion including: total volume, total duration, exercise count, and date | MUST |
+| REQ-F-027 | The system shall allow users to add free-text notes to a completed session | MAY |
 
-* id (PK)
-* workout_id (FK)
-* exercise_id (FK)
-* sets
-* reps
+### 6.4 Progress Tracking & Analytics
 
----
+| ID | Requirement | Priority |
+|----|-------------|---------|
+| REQ-F-030 | The system shall display a dashboard with: current streak, sessions this week, latest logged weight, and nearest upcoming session | MUST |
+| REQ-F-031 | The system shall allow users to log a daily body weight entry | MUST |
+| REQ-F-032 | The system shall display a line chart of body weight over time, filterable by 4 weeks / 3 months / all time | MUST |
+| REQ-F-033 | The system shall display a bar chart of weekly training volume over the past 8 weeks | MUST |
+| REQ-F-034 | The system shall track and display a training streak counter | SHOULD |
+| REQ-F-035 | The system shall calculate and display estimated 1RM for user-designated key lifts | SHOULD |
+| REQ-F-036 | The system shall award achievement badges for milestones (first session, 7-day streak, 30-day streak, etc.) | SHOULD |
+| REQ-F-037 | The system shall allow users to view the complete history of past workout sessions | MUST |
 
-#### progress_logs
+### 6.5 AI Chatbot
 
-* id (PK)
-* user_id (FK)
-* exercise_id (FK)
-* weight
-* reps
-* date
+| ID | Requirement | Priority |
+|----|-------------|---------|
+| REQ-F-040 | The system shall provide a conversational AI chatbot powered by the Claude API | MUST |
+| REQ-F-041 | The chatbot shall have access to the user's profile (goal, fitness level, equipment) and current workout plan to personalize responses | MUST |
+| REQ-F-042 | The chatbot shall be capable of answering questions about: exercise selection, technique, muscle groups, programming concepts | MUST |
+| REQ-F-043 | The chatbot shall be capable of calculating TDEE and providing macro split guidance based on the user's goal | MUST |
+| REQ-F-044 | The chatbot shall suggest alternative exercises when the user mentions injury, pain, or missing equipment | MUST |
+| REQ-F-045 | The chatbot shall display 3–5 suggested quick-start prompts at the beginning of a new conversation | SHOULD |
+| REQ-F-046 | The system shall persist chat conversation history for at least 90 days | SHOULD |
+| REQ-F-047 | The chatbot response time shall not exceed 5 seconds under normal load | MUST |
+| REQ-F-048 | The chatbot shall include a disclaimer that it does not provide medical advice | MUST |
 
----
+### 6.6 Nutrition Tracking
 
-## 6. Validation Rules
-
-### Authentication
-
-* Email must be valid format
-* Password minimum 6 characters
-
-### Workout
-
-* Date is required
-
-### Exercise
-
-* sets > 0
-* reps > 0
-
-### Progress
-
-* weight ≥ 0
-* reps > 0
+| ID | Requirement | Priority |
+|----|-------------|---------|
+| REQ-F-050 | The system shall calculate the user's estimated TDEE using the Mifflin-St Jeor formula | SHOULD |
+| REQ-F-051 | The system shall allow users to set daily calorie and macro targets | SHOULD |
+| REQ-F-052 | The system shall allow users to log meals with food name, calorie count, and macros (protein, carbs, fat) | SHOULD |
+| REQ-F-053 | The system shall display daily macro progress bars for protein, carbs, and fat | SHOULD |
 
 ---
 
 ## 7. Non-Functional Requirements
 
-### Performance
+### 7.1 Performance
 
-* API response time < 300ms
+| ID | Requirement |
+|----|-------------|
+| REQ-NF-001 | Page Largest Contentful Paint (LCP) shall be ≤ 2.5 seconds on a standard broadband connection |
+| REQ-NF-002 | API responses for data reads shall return within 500ms at the 95th percentile |
+| REQ-NF-003 | Chatbot first-token response shall begin streaming within 3 seconds |
+| REQ-NF-004 | The system shall support at least 10,000 concurrent users without response time degradation beyond 20% |
 
-### Security
+### 7.2 Security
 
-* Password hashing (bcrypt)
-* JWT authentication
+| ID | Requirement |
+|----|-------------|
+| REQ-NF-010 | All HTTP traffic shall be redirected to HTTPS |
+| REQ-NF-011 | User passwords shall be stored as bcrypt hashes (cost factor ≥ 12) |
+| REQ-NF-012 | JSON Web Tokens (JWT) shall expire after 24 hours; refresh tokens after 30 days |
+| REQ-NF-013 | The system shall implement rate limiting on authentication endpoints (max 10 failed attempts per 15 minutes per IP) |
+| REQ-NF-014 | The system shall protect against OWASP Top 10 vulnerabilities (SQL injection, XSS, CSRF, etc.) |
+| REQ-NF-015 | User health data at rest shall be stored in an encrypted database |
 
-### Usability
+### 7.3 Usability
 
-* Simple UI
-* Easy navigation
+| ID | Requirement |
+|----|-------------|
+| REQ-NF-020 | A new user with no gym experience shall be able to complete onboarding and start their first session within 10 minutes |
+| REQ-NF-021 | The UI shall be usable without instructions for the core workout logging flow |
+| REQ-NF-022 | All interactive elements shall have a minimum tap target size of 44×44px (WCAG 2.1 AA) |
+| REQ-NF-023 | Color alone shall not be used to convey critical information |
 
-### Maintainability
+### 7.4 Reliability & Availability
 
-* Modular code structure
-* Clear naming conventions
+| ID | Requirement |
+|----|-------------|
+| REQ-NF-030 | The system shall maintain 99.5% uptime per calendar month (excluding planned maintenance) |
+| REQ-NF-031 | Planned maintenance windows shall be scheduled outside peak hours (11 PM – 5 AM local time) |
+| REQ-NF-032 | The system shall perform automated database backups daily; backups shall be retained for 30 days |
+| REQ-NF-033 | Recovery Time Objective (RTO) shall be ≤ 2 hours; Recovery Point Objective (RPO) shall be ≤ 24 hours |
+
+### 7.5 Privacy & Compliance
+
+| ID | Requirement |
+|----|-------------|
+| REQ-NF-040 | The system shall comply with applicable data protection principles (GDPR-aligned where applicable) |
+| REQ-NF-041 | Users shall be able to export their data in a machine-readable format (JSON or CSV) |
+| REQ-NF-042 | Users shall be able to delete all their personal data within 30 days of requesting account deletion |
+| REQ-NF-043 | The privacy policy and terms of service shall be accessible from all pages |
 
 ---
 
-## 8. Error Handling
+## 8. Constraints & Assumptions
 
-* Return proper HTTP status codes:
+### 8.1 Technical Constraints
 
-  * 200 OK
-  * 400 Bad Request
-  * 401 Unauthorized
-  * 404 Not Found
-  * 500 Internal Server Error
+- The chatbot is powered exclusively by the Anthropic Claude API; usage must comply with Anthropic's usage policies
+- The web application must function as a Single Page Application (SPA) or Server-Side Rendered (SSR) app — no native mobile app in v1.0
+- The exercise media library (GIFs/images) must be served via CDN to meet performance requirements
+- Third-party authentication is limited to Google OAuth 2.0 for v1.0
 
----
+### 8.2 Business Constraints
 
-## 9. Assumptions
+- MVP must be deliverable within 2 months with a team of 2–3 developers
+- Infrastructure costs must remain under budget; serverless/managed services preferred
+- No dependency on paid third-party fitness databases; exercise data must be owned or freely licensed
 
-* Users have basic knowledge of gym exercises
-* Internet connection is stable
-* System is used by individual users (not enterprise scale)
+### 8.3 Assumptions
 
----
-
-## 10. Future Enhancements
-
-* Role-based access (trainer / user)
-* Analytics dashboard
-* AI workout recommendation
-* Mobile application support
+- Users have a stable internet connection (≥ 5 Mbps) during active workout sessions
+- Users access the system primarily on mobile phones during gym sessions and on desktop for planning
+- The system does not need to integrate with gym equipment or IoT devices in v1.0
+- Users are responsible for the accuracy of the health data they input
+- The AI chatbot does not retain memory between separate browser sessions unless conversation history is explicitly loaded
 
 ---
 
-## Conclusion
+## 9. Acceptance Criteria Summary
 
-This document defines the core requirements for building the IronFlow system.
-It ensures clarity in development and provides a strong foundation for scalable implementation.
+| Requirement Group | Key Acceptance Criteria |
+|-------------------|------------------------|
+| Authentication | User can register, verify email, log in, and complete onboarding in under 10 minutes |
+| Workout Planning | User can create a 3-day/week plan with custom exercises in under 5 minutes |
+| Session Logging | User can log a full 5-exercise session with sets/reps/weight and receive a summary |
+| Progress Tracking | Weight log chart renders correctly for all three time ranges; streak counter increments after each session |
+| AI Chatbot | Chatbot responds to workout and nutrition questions using user's actual profile data within 5 seconds |
+| Performance | LCP ≤ 2.5s; API response P95 ≤ 500ms under simulated 1,000 concurrent user load test |
+| Security | Penetration test returns no Critical or High severity findings before go-live |
+
+---
+
+*Document Owner: Product Team | Next Review: Before Sprint 1 kickoff*
